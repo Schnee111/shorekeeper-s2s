@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.0](https://github.com/Schnee111/shorekeeper-s2s/compare/shorekeeper-s2s-v0.3.0...shorekeeper-s2s-v0.4.0) (2026-09-06)
+
+
+### Features
+
+* **store:** implement TaskStoreClient adapter with task_id regex validation ([#28](https://github.com/Schnee111/shorekeeper-s2s/issues/28), [#29](https://github.com/Schnee111/shorekeeper-s2s/issues/29)) ([b2ef47d](https://github.com/Schnee111/shorekeeper-s2s/commit/b2ef47d3719be6ef7977c9929f2e65b45324ec09))
+
+
+### Bug Fixes
+
+* **agent:** replace hardcoded SearXNG URL with environment variable ([#30](https://github.com/Schnee111/shorekeeper-s2s/issues/30)) ([fc6c322](https://github.com/Schnee111/shorekeeper-s2s/commit/fc6c322a7a6850b0e3a3c0bc4a1657bf2f263b24))
+* **auth:** add constant-time token auth and identity whitelist to token server ([#27](https://github.com/Schnee111/shorekeeper-s2s/issues/27)) ([2fa363b](https://github.com/Schnee111/shorekeeper-s2s/commit/2fa363be65c4935f05101ec6d8c56d88a4f36e35))
+* **orchestrator:** add guard for empty array elements in parseVerifierCommand and parseVerifierCmd ([4a18b88](https://github.com/Schnee111/shorekeeper-s2s/commit/4a18b88e67bff8918bbae37b69ac7616934ec4d2))
+* **security:** eliminate sh -c in worker manager and merge orchestrator with execFileSync ([#26](https://github.com/Schnee111/shorekeeper-s2s/issues/26)) ([56873e5](https://github.com/Schnee111/shorekeeper-s2s/commit/56873e52bf607aece9d26d7a93b5314ea2beeaea))
+
 ## [0.3.0](https://github.com/Schnee111/shorekeeper-s2s/compare/shorekeeper-s2s-v0.2.1...shorekeeper-s2s-v0.3.0) (2026-09-06)
 
 

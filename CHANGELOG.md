@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/Schnee111/shorekeeper-s2s/compare/shorekeeper-s2s-v0.2.1...shorekeeper-s2s-v0.3.0) (2026-09-06)
+
+
+### Features
+
+* **ci:** register and execute comprehensive e2e test suite in ci-cd workflow ([521cf11](https://github.com/Schnee111/shorekeeper-s2s/commit/521cf11e23ca8e687f267e4171ed4bc5c25232bf))
+
+
+### Bug Fixes
+
+* **agent:** handle empty string overrides properly in search_mempalace_mcp to fix test_search_mempalace_unconfigured ([1d49774](https://github.com/Schnee111/shorekeeper-s2s/commit/1d497747d1f6ea12b196a802916dc8fab4c2884e))
+* **ci:** point pytest directly to tests folder inside apps/agent to eliminate ambiguous test discovery ([fa730b2](https://github.com/Schnee111/shorekeeper-s2s/commit/fa730b251d305603fbff9e34117b274de0a4614e))
+
 ## [0.2.1](https://github.com/Schnee111/shorekeeper-s2s/compare/shorekeeper-s2s-v0.2.0...shorekeeper-s2s-v0.2.1) (2026-09-06)
 
 

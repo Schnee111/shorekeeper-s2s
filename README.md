@@ -34,6 +34,20 @@ Shorekeeper is partitioned into specialized repositories tailored for distinct o
 
 ---
 
+## 🛠️ Technology Stack
+
+| Layer | Technologies & Frameworks | Description |
+|---|---|---|
+| **Native S2S Pipeline** | Gemini 3.1 Live API · LiveKit Python Agents | Sub-second bidirectional Speech-to-Speech over WebRTC |
+| **Monorepo Architecture** | pnpm Workspaces · TypeScript 5.7 · Python `uv` | Decoupled client HUD, modular contracts, and standalone Python services |
+| **Persistence Engine** | SQLite WAL · better-sqlite3 | Atomic single-writer orchestrator with crash-resilient outbox queue |
+| **Worker Orchestration** | OMP (oh-my-pi) Bridge · Git Worktrees | Isolated asynchronous coding subagent mesh with resource conflict maps |
+| **Observability & Tracing** | OpenTelemetry SDK · OTLP · Jaeger · Prometheus | Zero-cost self-hosted distributed telemetry with privacy sanitization |
+| **Frontend Voice HUD** | Svelte 5 (Runes) · Vite · Web Audio API | Low-latency audio-reactive Spectro visualizer and telemetry status card |
+| **Production DevOps** | Multi-stage Docker · GHCR · Systemd · Nginx | Hardened containerization with memory guards (<800MB) and SemVer automation |
+
+---
+
 ## 🏗️ Monorepo Structure
 
 ```text

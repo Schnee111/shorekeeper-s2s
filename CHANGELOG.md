@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Schnee111/shorekeeper-s2s/compare/shorekeeper-s2s-v0.2.0...shorekeeper-s2s-v0.2.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* **client:** pin pnpm 9.15.9 via npm in Dockerfile to eliminate corepack undici assertion crash ([07b0451](https://github.com/Schnee111/shorekeeper-s2s/commit/07b0451ea1e188306e65013f807d9c523f950628))
+
 ## [0.2.0](https://github.com/Schnee111/shorekeeper-s2s/compare/shorekeeper-s2s-v0.1.0...shorekeeper-s2s-v0.2.0) (2026-09-06)
 
 

@@ -76,7 +76,7 @@ jobs:
       - name: Run Python Agent Tests
         run: |
           cd apps/agent
-          uv run pytest -v apps/agent/tests || uv run pytest -v tests
+          uv run pytest -v tests
 
   build-and-push:
     name: Build & Push GHCR Containers

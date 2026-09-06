@@ -1,0 +1,42 @@
+services:
+  # Shorekeeper LiveKit S2S Agent (Gemini Live)
+  shorekeeper-s2s-agent:
+    image: ghcr.io/schnee111/shorekeeper-s2s-agent:latest
+    container_name: shorekeeper-s2s-agent
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - apps/agent/.env.local
+    environment:
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          memory: 800M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Shorekeeper S2S Token Server (aiohttp port 8083)
+  shorekeeper-s2s-token-server:
+    image: ghcr.io/schnee111/shorekeeper-s2s-token-server:latest
+    container_name: shorekeeper-s2s-token-server
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8083:8083"
+    env_file:
+      - apps/agent/.env.local
+    environment:
+      - SHOREKEEPER_TOKEN_PORT=8083
+      - SHOREKEEPER_AGENT_NAME=shorekeeper
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"

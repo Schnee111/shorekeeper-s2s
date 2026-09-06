@@ -1,0 +1,11 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "shorekeeper-s2s",
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": true,
+      "bump-patch-pre-major": true
+    }
+  }
+}

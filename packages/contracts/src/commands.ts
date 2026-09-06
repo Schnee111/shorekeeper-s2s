@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { LaneSchema, TaskStatus } from "./contracts.js";
+import { LaneSchema, TaskIdSchema, TaskStatus } from "./contracts.js";
 
 // ---------------------------------------------------------------------------
 // Commands (Imperative actions requested by Voice or CLI)
 // ---------------------------------------------------------------------------
 
 export const CreateTaskCommandSchema = z.object({
-  task_id: z.string().min(1).max(64),
+  task_id: TaskIdSchema,
   session_room: z.string().default(""),
   user_intent: z.string().min(1),
   lane: LaneSchema.default("debug"),
@@ -17,13 +17,13 @@ export const CreateTaskCommandSchema = z.object({
 export type CreateTaskCommand = z.infer<typeof CreateTaskCommandSchema>;
 
 export const StopTaskCommandSchema = z.object({
-  task_id: z.string().min(1),
+  task_id: TaskIdSchema,
   reason: z.string().default("cancelled by user"),
 });
 export type StopTaskCommand = z.infer<typeof StopTaskCommandSchema>;
 
 export const ResumeTaskCommandSchema = z.object({
-  task_id: z.string().min(1),
+  task_id: TaskIdSchema,
   user_response: z.string().min(1),
 });
 export type ResumeTaskCommand = z.infer<typeof ResumeTaskCommandSchema>;
@@ -34,7 +34,7 @@ export type ResumeTaskCommand = z.infer<typeof ResumeTaskCommandSchema>;
 
 export const TaskReceiptSchema = z.object({
   accepted: z.boolean(),
-  task_id: z.string(),
+  task_id: TaskIdSchema,
   status: TaskStatus,
   mode: z.enum(["inline", "background"]).default("background"),
   created_at: z.number().int(),

@@ -63,6 +63,10 @@ def init_db(db_path: Optional[str] = None):
     get_task_store(db_path).init_schema()
 
 
+def get_searxng_url() -> str:
+    return os.getenv("SEARXNG_URL", "http://searxng:8080").rstrip("/")
+
+
 init_db()
 
 # Shorekeeper System Instructions for Gemini 3.1 Flash Live (Compiled from docs/agents/FRONT_AGENT.md & SOUL-front-router.md)
@@ -209,7 +213,7 @@ class ShorekeeperAgent(Agent):
         logger.info(f"Executing WebSearch: {query}")
         try:
             async with aiohttp.ClientSession() as session:
-                url = f"http://43.133.136.244:8888/search?q={query}&format=json"
+                url = f"{get_searxng_url()}/search?q={query}&format=json"
                 async with session.get(
                     url, timeout=aiohttp.ClientTimeout(total=4.0)
                 ) as resp:
@@ -582,7 +586,7 @@ async def startup_health_check() -> dict[str, bool]:
             async with (
                 aiohttp.ClientSession() as s,
                 s.get(
-                    "http://43.133.136.244:8888/healthz",
+                    f"{get_searxng_url()}/healthz",
                     timeout=aiohttp.ClientTimeout(total=2.0),
                 ) as resp,
             ):

@@ -9,6 +9,7 @@ import textwrap
 import time
 import uuid
 import zoneinfo
+from typing import Optional
 
 import aiohttp
 from dotenv import load_dotenv
@@ -27,6 +28,7 @@ from livekit.agents import (
 from livekit.plugins.google.realtime import RealtimeModel
 
 from mempalace_client import search_mempalace_mcp
+from task_store_client import TaskStoreClient
 
 logger = logging.getLogger("shorekeeper-agent")
 
@@ -52,53 +54,13 @@ DATA_DIR = os.getenv("SHOREKEEPER_DATA_DIR") or os.path.abspath(
 DB_PATH = os.path.join(DATA_DIR, "tasks.db")
 
 
-def init_db():
-    os.makedirs(DATA_DIR, exist_ok=True)
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS tasks (
-              task_id       TEXT PRIMARY KEY,
-              session_room  TEXT NOT NULL DEFAULT '',
-              user_intent   TEXT NOT NULL DEFAULT '',
-              parent_id     TEXT,
-              lane          TEXT NOT NULL DEFAULT 'debug',
-              status        TEXT NOT NULL DEFAULT 'queued',
-              worker_pid    INTEGER,
-              heartbeat_ts  INTEGER,
-              created_at    INTEGER NOT NULL,
-              started_at    INTEGER,
-              finished_at   INTEGER,
-              contract_ref  TEXT NOT NULL DEFAULT '',
-              artifact_dir  TEXT,
-              summary       TEXT NOT NULL DEFAULT '',
-              error         TEXT,
-              notify_gate   TEXT NOT NULL DEFAULT 'next_turn',
-              priority      INTEGER NOT NULL DEFAULT 1
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS notify_outbox (
-              task_id      TEXT PRIMARY KEY,
-              status       TEXT NOT NULL,
-              created_at   INTEGER NOT NULL,
-              delivered    INTEGER NOT NULL DEFAULT 0,
-              delivered_at INTEGER
-            )
-            """
-        )
-        # Sprint B.2: Session resumption handle per room
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS session_resumption (
-              room TEXT PRIMARY KEY,
-              handle TEXT NOT NULL DEFAULT '',
-              updated_at INTEGER NOT NULL
-            )
-            """
-        )
+def get_task_store(db_path: Optional[str] = None) -> TaskStoreClient:
+    target_path = db_path or DB_PATH
+    return TaskStoreClient(target_path)
+
+
+def init_db(db_path: Optional[str] = None):
+    get_task_store(db_path).init_schema()
 
 
 init_db()
@@ -283,22 +245,19 @@ class ShorekeeperAgent(Agent):
             lane: Lane type ('research', 'frontend', 'debug', 'qa')
         """
         task_id = f"task_{uuid.uuid4().hex[:8]}"
-        now = int(time.time() * 1000)
         logger.info(f"Writing task to task-store: {task_id} - {title}")
 
         try:
-            with sqlite3.connect(DB_PATH) as conn:
-                conn.execute(
-                    """
-                    INSERT INTO tasks (
-                      task_id, session_room, user_intent, lane, status, created_at, priority
-                    ) VALUES (?, ?, ?, ?, 'queued', ?, 1)
-                    """,
-                    (task_id, self.room_name, f"{title}: {instruction}", lane, now),
-                )
+            get_task_store(DB_PATH).create_task(
+                task_id=task_id,
+                user_intent=f"{title}: {instruction}",
+                session_room=self.room_name,
+                lane=lane,
+                priority=1,
+            )
             return f"Task '{title}' berhasil dicatat ke TaskStore (ID: {task_id}, lane: {lane}). Worker akan segera mengeksekusinya."
         except Exception as e:
-            logger.exception("Failed to write task to sqlite")
+            logger.exception("Failed to write task to task store")
             return f"Task '{title}' gagal dicatat: {e}"
 
     @function_tool

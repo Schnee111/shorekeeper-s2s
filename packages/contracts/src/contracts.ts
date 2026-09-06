@@ -71,8 +71,15 @@ export function canTransition(from: TaskStatus, to: TaskStatus): boolean {
 
 export const summaryMaxWords = 200;
 
+export const TASK_ID_REGEX = /^[a-zA-Z0-9_-]{1,64}$/;
+export const TaskIdSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(TASK_ID_REGEX, "task_id hanya boleh alfanumerik, underscore, dan tanda hubung (1-64 karakter)");
+
 export const TaskRecordSchema = z.object({
-  task_id: z.string().min(1).max(64),
+  task_id: TaskIdSchema,
   session_room: z.string().default(""),
   user_intent: z.string().default(""),
   parent_id: z.string().nullable().default(null),
@@ -106,7 +113,7 @@ export type TaskRecord = z.infer<typeof TaskRecordSchema>;
 
 export const TaskSpecSchema = z
   .object({
-    task_id: z.string().min(1).max(64),
+    task_id: TaskIdSchema,
     lane: LaneSchema.default("debug"),
     /** Objective 1 kalimat */
     objective: z.string().min(1, "objective wajib diisi"),

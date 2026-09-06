@@ -133,4 +133,40 @@ describe("versioning", () => {
   it("CONTRACT_VERSION = 1 (breaking change => bump, jangan ubah in-place)", () => {
     expect(CONTRACT_VERSION).toBe("1");
   });
+
+  it("task_id dengan flag injection atau path traversal => reject", () => {
+    const maliciousIds = [
+      "--upload-pack=evil",
+      "../traversal",
+      "task/subtask",
+      "task;rm -rf /",
+      "task id with space",
+      "task$evil",
+    ];
+    for (const tid of maliciousIds) {
+      const res1 = TaskRecordSchema.safeParse({
+        task_id: tid,
+        created_at: Date.now(),
+      });
+      expect(res1.success, `TaskRecordSchema should reject ${tid}`).toBe(false);
+
+      const res2 = TaskSpecSchema.safeParse({
+        task_id: tid,
+        objective: "clean code",
+        acceptance_criteria: ["ok"],
+      });
+      expect(res2.success, `TaskSpecSchema should reject ${tid}`).toBe(false);
+    }
+  });
+
+  it("task_id valid format alfanumerik, dash, underscore => pass", () => {
+    const validIds = ["task-123", "TASK_456", "task-a_b-1", "012345"];
+    for (const tid of validIds) {
+      const res = TaskRecordSchema.safeParse({
+        task_id: tid,
+        created_at: Date.now(),
+      });
+      expect(res.success, `TaskRecordSchema should accept ${tid}`).toBe(true);
+    }
+  });
 });

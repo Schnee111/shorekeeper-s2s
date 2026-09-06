@@ -1,7 +1,7 @@
 {
   "name": "shorekeeper",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shorekeeper — voice-first multi-agent AI assistant (monorepo). TS workspace: apps/client + packages/*; Python apps via uv (standalone).",
   "scripts": {
     "build": "pnpm -r build",

@@ -47,7 +47,9 @@ async def search_mempalace_mcp(
     Fails open gracefully: returns polite natural narrative on timeout or error,
     never crashing or leaking raw stack traces.
     """
-    mcp_endpoint = os.getenv("MEMPALACE_MCP_HTTP_ENDPOINT", "") if endpoint is None else endpoint
+    mcp_endpoint = (
+        os.getenv("MEMPALACE_MCP_HTTP_ENDPOINT", "") if endpoint is None else endpoint
+    )
     mcp_token = os.getenv("MEMPALACE_MCP_HTTP_TOKEN", "") if token is None else token
 
     if not mcp_endpoint or not mcp_token:

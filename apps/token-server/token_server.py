@@ -9,8 +9,10 @@ Shorekeeper. Bedanya dengan versi jarvis lama:
 Env: LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET
 """
 
+import hmac
 import json
 import os
+import re
 
 from aiohttp import web
 from dotenv import load_dotenv
@@ -20,6 +22,9 @@ load_dotenv()
 
 PORT = int(os.getenv("SHOREKEEPER_TOKEN_PORT", "8083"))
 AGENT_NAME = os.getenv("SHOREKEEPER_AGENT_NAME", "shorekeeper")
+TOKEN_SECRET = os.getenv("SHOREKEEPER_TOKEN_SECRET", "")
+REQUIRE_AUTH = os.getenv("SHOREKEEPER_REQUIRE_AUTH", "1" if TOKEN_SECRET else "0") == "1"
+IDENTITY_REGEX = re.compile(r"^[a-zA-Z0-9_-]{1,32}$")
 
 # 30 suara native Gemini Live (sama dengan VALID_GEMINI_VOICES di agent).
 VOICE_LABELS = {
@@ -69,9 +74,41 @@ async def voices_list(_request: web.Request) -> web.Response:
     )
 
 
+def check_auth(request: web.Request) -> bool:
+    secret = os.getenv("SHOREKEEPER_TOKEN_SECRET", TOKEN_SECRET)
+    require_auth = os.getenv("SHOREKEEPER_REQUIRE_AUTH", "1" if secret else "0") == "1"
+    if not require_auth and not secret:
+        return True
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+        if secret and hmac.compare_digest(token, secret):
+            return True
+    token_param = request.query.get("auth_token", "")
+    if token_param and secret and hmac.compare_digest(token_param, secret):
+        return True
+    return False
+
+
 async def get_token(request: web.Request) -> web.Response:
+    if not check_auth(request):
+        return web.Response(
+            status=401,
+            text=json.dumps({"error": "UNAUTHORIZED", "message": "Valid Bearer token or auth_token required"}),
+            content_type="application/json",
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
+
     room = request.query.get("room", "shorekeeper-main")
     identity = request.query.get("identity", "schnee")
+    if not IDENTITY_REGEX.match(identity):
+        return web.Response(
+            status=400,
+            text=json.dumps({"error": "INVALID_IDENTITY", "message": "Identity must match ^[a-zA-Z0-9_-]{1,32}$"}),
+            content_type="application/json",
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
+
     voice_id = request.query.get("voice") or DEFAULT_VOICE
     if voice_id not in VOICE_LABELS:
         voice_id = DEFAULT_VOICE
@@ -124,10 +161,15 @@ async def _cors_options(_request: web.Request) -> web.Response:
     )
 
 
-app = web.Application()
-app.router.add_get("/token", get_token)
-app.router.add_get("/voices", voices_list)
-app.router.add_options("/token", _cors_options)
+def create_app() -> web.Application:
+    new_app = web.Application()
+    new_app.router.add_get("/token", get_token)
+    new_app.router.add_get("/voices", voices_list)
+    new_app.router.add_options("/token", _cors_options)
+    return new_app
+
+
+app = create_app()
 
 if __name__ == "__main__":
     print(f"Shorekeeper token server starting on :{PORT} (agent: {AGENT_NAME})")

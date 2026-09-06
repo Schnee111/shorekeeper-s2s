@@ -13,7 +13,7 @@ import os
 import re
 import sqlite3
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 TASK_ID_REGEX = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
 VALID_LANES = ("research", "frontend", "debug", "qa")
@@ -114,11 +114,11 @@ class TaskStoreClient:
         parent_id: Optional[str] = None,
         root_task_id: Optional[str] = None,
         priority: int = 1,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         if not TASK_ID_REGEX.match(task_id):
             raise TaskStoreError(
                 "INVALID_TASK_ID",
-                f"Invalid task_id '{task_id}'. Must match ^[a-zA-Z0-9][a-zA-Z0-9_-]{{0,63}}$",
+                f"Invalid task_id '{task_id}'. Must match ^[a-zA-Z0-9_-]{{1,64}}$",
             )
         if lane not in VALID_LANES:
             raise TaskStoreError(
@@ -131,34 +131,33 @@ class TaskStoreClient:
             {"lane": lane, "user_intent": user_intent, "status": "queued"}
         )
 
-        with self.get_connection() as conn:
-            with conn:
-                conn.execute(
-                    """
-                    INSERT INTO tasks (
-                        task_id, session_room, user_intent, parent_id, root_task_id,
-                        lane, status, created_at, priority
-                    ) VALUES (?, ?, ?, ?, ?, ?, 'queued', ?, ?)
-                    """,
-                    (
-                        task_id,
-                        session_room,
-                        user_intent,
-                        parent_id,
-                        root_task_id,
-                        lane,
-                        now,
-                        priority,
-                    ),
-                )
-                conn.execute(
-                    """
-                    INSERT INTO task_outbox (
-                        event_id, task_id, event_type, sequence, payload, created_at, published
-                    ) VALUES (?, ?, 'task.accepted', 1, ?, ?, 0)
-                    """,
-                    (event_id, task_id, payload, now),
-                )
+        with self.get_connection() as conn, conn:
+            conn.execute(
+                """
+                INSERT INTO tasks (
+                    task_id, session_room, user_intent, parent_id, root_task_id,
+                    lane, status, created_at, priority
+                ) VALUES (?, ?, ?, ?, ?, ?, 'queued', ?, ?)
+                """,
+                (
+                    task_id,
+                    session_room,
+                    user_intent,
+                    parent_id,
+                    root_task_id,
+                    lane,
+                    now,
+                    priority,
+                ),
+            )
+            conn.execute(
+                """
+                INSERT INTO task_outbox (
+                    event_id, task_id, event_type, sequence, payload, created_at, published
+                ) VALUES (?, ?, 'task.accepted', 1, ?, ?, 0)
+                """,
+                (event_id, task_id, payload, now),
+            )
 
         return {
             "task_id": task_id,
@@ -169,7 +168,7 @@ class TaskStoreClient:
             "created_at": now,
         }
 
-    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task(self, task_id: str) -> Optional[dict[str, Any]]:
         with self.get_connection() as conn:
             row = conn.execute(
                 "SELECT * FROM tasks WHERE task_id = ?", (task_id,)
@@ -178,7 +177,7 @@ class TaskStoreClient:
                 return dict(row)
             return None
 
-    def list_recent_tasks(self, limit: int = 5) -> List[Dict[str, Any]]:
+    def list_recent_tasks(self, limit: int = 5) -> list[dict[str, Any]]:
         with self.get_connection() as conn:
             rows = conn.execute(
                 "SELECT * FROM tasks ORDER BY created_at DESC LIMIT ?", (limit,)
@@ -194,13 +193,12 @@ class TaskStoreClient:
 
     def save_session_handle(self, room: str, handle: str) -> None:
         now = int(time.time() * 1000)
-        with self.get_connection() as conn:
-            with conn:
-                conn.execute(
-                    """
-                    INSERT INTO session_resumption (room, handle, updated_at)
-                    VALUES (?, ?, ?)
-                    ON CONFLICT(room) DO UPDATE SET handle = excluded.handle, updated_at = excluded.updated_at
-                    """,
-                    (room, handle, now),
-                )
+        with self.get_connection() as conn, conn:
+            conn.execute(
+                """
+                INSERT INTO session_resumption (room, handle, updated_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(room) DO UPDATE SET handle = excluded.handle, updated_at = excluded.updated_at
+                """,
+                (room, handle, now),
+            )

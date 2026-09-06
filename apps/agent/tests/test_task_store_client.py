@@ -1,7 +1,10 @@
 import concurrent.futures
 import sqlite3
+
 import pytest
+
 from task_store_client import TaskStoreClient, TaskStoreError
+
 
 def test_atomic_task_creation_with_outbox(tmp_path):
     db_file = str(tmp_path / "tasks.db")
@@ -33,10 +36,12 @@ def test_atomic_task_creation_with_outbox(tmp_path):
         assert outbox["event_type"] == "task.accepted"
         assert outbox["published"] == 0
 
+
 def test_task_id_regex_validation(tmp_path):
     store = TaskStoreClient(str(tmp_path / "tasks.db"))
     with pytest.raises(TaskStoreError, match="INVALID_TASK_ID"):
         store.create_task(task_id="../evil/traversal", user_intent="do harm")
+
 
 def test_concurrent_wal_writes(tmp_path):
     db_file = str(tmp_path / "tasks.db")

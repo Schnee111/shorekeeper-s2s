@@ -48,6 +48,36 @@ Shorekeeper is partitioned into specialized repositories tailored for distinct o
 
 ---
 
+## 🏛️ System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Client ["User Client (Svelte 5 Voice HUD)"]
+        Mic["User Microphone"] <-->|"Duplex WebRTC Audio"| SFU["LiveKit Cloud SFU"]
+    end
+
+    SFU <-->|"WebRTC Audio Stream"| AgentCore["Shorekeeper S2S Agent (apps/agent)<br/>Gemini 3.1 Flash Live (S2S Engine)"]
+
+    subgraph AgentCoreDetails ["Agent Function Context Layer"]
+        AgentCore -->|"Clock"| F_Time["get_current_time() (WIB)"]
+        AgentCore -->|"Search"| F_Search["web_search() (SearXNG)"]
+        AgentCore -->|"Recall"| F_Memory["consult() & memory_search()"]
+        AgentCore -->|"Delegate"| F_Task["delegate_task() (Fast-Ack)"]
+    end
+
+    F_Task -->|"Atomic Append"| TaskStore[("TaskStore<br/>(SQLite WAL)")]
+
+    subgraph BackendMesh ["Multi-Agent Backend Mesh (packages/*)"]
+        TaskStore -->|"Poll / Dispatch"| WorkerMgr["Worker Manager (Pool Cap: 3)"]
+        WorkerMgr -->|"Spawn"| OMP["oh-my-pi Subagents<br/>(Isolated Worktrees)"]
+        OMP -->|"Sequential Merge"| MergeOrch["Merge Orchestrator<br/>(AC Verifier Gate)"]
+    end
+
+    AgentCore -.->|"Distributed Tracing"| Telemetry["OTel Collector ➔ Jaeger / Prometheus"]
+```
+
+---
+
 ## 🏗️ Monorepo Structure
 
 ```text

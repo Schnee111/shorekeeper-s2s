@@ -116,7 +116,7 @@ function runGitSafe(repo: string, args: string[]): { stdout: string; exitCode: n
 
 export function parseVerifierCommand(cmd: VerifierCommand): { file: string; args: string[] } {
   if (Array.isArray(cmd)) {
-    if (cmd.length === 0) throw new Error("MergeOrchestrator: verifierCmd tidak boleh array kosong");
+    if (cmd.length === 0 || !cmd[0]) throw new Error("MergeOrchestrator: verifierCmd tidak boleh array kosong");
     return { file: cmd[0], args: cmd.slice(1) };
   }
   const trimmed = cmd.trim();

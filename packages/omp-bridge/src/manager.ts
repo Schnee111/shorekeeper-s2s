@@ -167,7 +167,7 @@ const delay = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms
 
 export function parseVerifierCmd(cmd: string | string[]): { file: string; args: string[] } {
   if (Array.isArray(cmd)) {
-    if (cmd.length === 0) throw new Error("WorkerManager: verifierCmd cannot be empty array");
+    if (cmd.length === 0 || !cmd[0]) throw new Error("WorkerManager: verifierCmd cannot be empty array");
     return { file: cmd[0], args: cmd.slice(1) };
   }
   const trimmed = cmd.trim();

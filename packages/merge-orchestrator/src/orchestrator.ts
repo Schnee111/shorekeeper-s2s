@@ -64,10 +64,12 @@ export interface OrchestratorEvent {
   ok?: boolean;
 }
 
+export type VerifierCommand = string | string[];
+
 export interface OrchestratorOptions {
   store: TaskStore;
   /** Test suite repo (verifier read-only). Wajib diisi. */
-  verifierCmd: string;
+  verifierCmd: VerifierCommand;
   /** Base dir artifact (default data/artifacts). */
   artifactDirBase?: string;
   /** Base dir worktree sementara verifier (default os.tmpdir()/sk-ormerge). */
@@ -112,13 +114,34 @@ function runGitSafe(repo: string, args: string[]): { stdout: string; exitCode: n
   }
 }
 
+export function parseVerifierCommand(cmd: VerifierCommand): { file: string; args: string[] } {
+  if (Array.isArray(cmd)) {
+    if (cmd.length === 0) throw new Error("MergeOrchestrator: verifierCmd tidak boleh array kosong");
+    return { file: cmd[0], args: cmd.slice(1) };
+  }
+  const trimmed = cmd.trim();
+  if (!trimmed) throw new Error("MergeOrchestrator: verifierCmd wajib diisi (test suite repo)");
+
+  // Safe argument splitting respecting quoted strings (no subshell invocation)
+  const matches = trimmed.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+  const parsed = matches.map((m) => {
+    if ((m.startsWith('"') && m.endsWith('"')) || (m.startsWith("'") && m.endsWith("'"))) {
+      return m.slice(1, -1);
+    }
+    return m;
+  });
+  const file = parsed[0];
+  if (!file) throw new Error("MergeOrchestrator: executable tidak ditemukan dalam verifierCmd");
+  return { file, args: parsed.slice(1) };
+}
+
 export class MergeOrchestrator {
   private opts: Required<OrchestratorOptions>;
   private chain: Promise<void> = Promise.resolve();
   private inFlightCount = 0;
 
   constructor(opts: OrchestratorOptions) {
-    if (!opts.verifierCmd || opts.verifierCmd.trim().length === 0) {
+    if (!opts.verifierCmd || (typeof opts.verifierCmd === "string" && opts.verifierCmd.trim().length === 0) || (Array.isArray(opts.verifierCmd) && opts.verifierCmd.length === 0)) {
       throw new Error("MergeOrchestrator: verifierCmd wajib diisi (test suite repo)");
     }
     this.opts = {
@@ -402,7 +425,8 @@ export class MergeOrchestrator {
     let out = "";
     let ok = false;
     try {
-      out = execFileSync("sh", ["-c", this.opts.verifierCmd], {
+      const { file, args } = parseVerifierCommand(this.opts.verifierCmd);
+      out = execFileSync(file, args, {
         cwd,
         encoding: "utf8",
         env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1", PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1" },

@@ -142,7 +142,7 @@ export interface WorkerManagerOptions {
   /** Ownership map (TASK-2.3): pre-spawn check — overlap tetap queued. */
   ownership?: OwnershipLike | null;
   /** Verifier (test suite repo) untuk cek idempotensi. */
-  verifierCmd?: string;
+  verifierCmd?: string | string[];
   /** Dir untuk marker spawn counter (tests/E2E: data/spawns). */
   mockMarkerDir?: string;
   /** Runner injectable (unit test; default bridge runTask MOCK). */
@@ -165,6 +165,26 @@ interface Slot {
 
 const delay = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
+export function parseVerifierCmd(cmd: string | string[]): { file: string; args: string[] } {
+  if (Array.isArray(cmd)) {
+    if (cmd.length === 0) throw new Error("WorkerManager: verifierCmd cannot be empty array");
+    return { file: cmd[0], args: cmd.slice(1) };
+  }
+  const trimmed = cmd.trim();
+  if (!trimmed) throw new Error("WorkerManager: verifierCmd cannot be empty string");
+
+  const matches = trimmed.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+  const parsed = matches.map((m) => {
+    if ((m.startsWith('"') && m.endsWith('"')) || (m.startsWith("'") && m.endsWith("'"))) {
+      return m.slice(1, -1);
+    }
+    return m;
+  });
+  const file = parsed[0];
+  if (!file) throw new Error("WorkerManager: executable not found in verifierCmd");
+  return { file, args: parsed.slice(1) };
+}
+
 export class WorkerManager {
   private opts: {
     worktreeBase: string;
@@ -176,7 +196,7 @@ export class WorkerManager {
     defaultTimeoutMs: number;
     artifactDirBase: string;
     ownership: OwnershipLike | null;
-    verifierCmd: string;
+    verifierCmd: string | string[];
     mockMarkerDir: string;
     runner: RunnerImpl;
     killWorker: (taskId: string, pid: number | null | undefined) => boolean;
@@ -724,7 +744,8 @@ export class WorkerManager {
     const repoPath = this.repoOf.get(taskId);
     if (!repoPath) return false;
     try {
-      execFileSync("sh", ["-c", this.opts.verifierCmd], {
+      const { file, args } = parseVerifierCmd(this.opts.verifierCmd);
+      execFileSync(file, args, {
         cwd: repoPath,
         encoding: "utf8",
         env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1", PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1" },

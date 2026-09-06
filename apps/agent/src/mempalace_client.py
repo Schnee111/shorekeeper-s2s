@@ -99,7 +99,9 @@ async def search_mempalace_mcp(
             elapsed_ms = (time.perf_counter() - t0) * 1000
 
             if resp.status != 200:
-                logger.warning("MemPalace HTTP status %s: %s", resp.status, await resp.text())
+                logger.warning(
+                    "MemPalace HTTP status %s: %s", resp.status, await resp.text()
+                )
                 return {
                     "status": "fail_open",
                     "http_code": resp.status,
@@ -159,20 +161,21 @@ async def search_mempalace_mcp(
                 if len(snippet) > 150:
                     snippet = snippet[:150] + "..."
 
-                drawers.append({
-                    "wing": wing_name,
-                    "room": room_name,
-                    "source_file": source_file,
-                    "similarity": similarity,
-                    "text": text,
-                    "snippet": snippet,
-                })
+                drawers.append(
+                    {
+                        "wing": wing_name,
+                        "room": room_name,
+                        "source_file": source_file,
+                        "similarity": similarity,
+                        "text": text,
+                        "snippet": snippet,
+                    }
+                )
 
                 narrative_items.append(f"- ({wing_name}/{room_name}): {snippet}")
 
-            narrative = (
-                f"Hasil pencarian ingatan untuk '{query}':\n"
-                + "\n".join(narrative_items)
+            narrative = f"Hasil pencarian ingatan untuk '{query}':\n" + "\n".join(
+                narrative_items
             )
 
             return {

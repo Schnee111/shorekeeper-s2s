@@ -59,8 +59,12 @@ class RaisingSession:
 def test_normalize_mcp_url():
     assert _normalize_mcp_url("http://127.0.0.1:8767") == "http://127.0.0.1:8767/mcp"
     assert _normalize_mcp_url("http://127.0.0.1:8767/") == "http://127.0.0.1:8767/mcp"
-    assert _normalize_mcp_url("http://127.0.0.1:8767/mcp") == "http://127.0.0.1:8767/mcp"
-    assert _normalize_mcp_url("http://127.0.0.1:8767/mcp/") == "http://127.0.0.1:8767/mcp"
+    assert (
+        _normalize_mcp_url("http://127.0.0.1:8767/mcp") == "http://127.0.0.1:8767/mcp"
+    )
+    assert (
+        _normalize_mcp_url("http://127.0.0.1:8767/mcp/") == "http://127.0.0.1:8767/mcp"
+    )
 
 
 @pytest.mark.asyncio
@@ -80,13 +84,13 @@ async def test_search_mempalace_mock_success():
     mock_payload = {
         "jsonrpc": "2.0",
         "id": 1,
-        "result": {
-            "content": [{"type": "text", "text": inner_text}]
-        }
+        "result": {"content": [{"type": "text", "text": inner_text}]},
     }
     resp = FakeResponse(200, mock_payload)
     with patch("aiohttp.ClientSession", return_value=FakeSession(resp)):
-        res = await search_mempalace_mcp("arch", endpoint="http://fake:8767", token="dummy")
+        res = await search_mempalace_mcp(
+            "arch", endpoint="http://fake:8767", token="dummy"
+        )
         assert res["status"] == "ok"
         assert len(res["drawers"]) == 1
         assert res["drawers"][0]["wing"] == "docs"
@@ -97,8 +101,12 @@ async def test_search_mempalace_mock_success():
 
 @pytest.mark.asyncio
 async def test_search_mempalace_timeout_fallback():
-    with patch("aiohttp.ClientSession", return_value=RaisingSession(asyncio.TimeoutError())):
-        res = await search_mempalace_mcp("arch", endpoint="http://fake:8767", token="dummy")
+    with patch(
+        "aiohttp.ClientSession", return_value=RaisingSession(asyncio.TimeoutError())
+    ):
+        res = await search_mempalace_mcp(
+            "arch", endpoint="http://fake:8767", token="dummy"
+        )
         assert res["status"] == "timeout"
         assert "kesulitan" in res["narrative"]
         assert res["drawers"] == []
@@ -108,7 +116,9 @@ async def test_search_mempalace_timeout_fallback():
 async def test_search_mempalace_500_fail_open():
     resp = FakeResponse(500, {}, "Internal Server Error")
     with patch("aiohttp.ClientSession", return_value=FakeSession(resp)):
-        res = await search_mempalace_mcp("arch", endpoint="http://fake:8767", token="dummy")
+        res = await search_mempalace_mcp(
+            "arch", endpoint="http://fake:8767", token="dummy"
+        )
         assert res["status"] == "fail_open"
         assert res["http_code"] == 500
         assert "kesulitan" in res["narrative"]

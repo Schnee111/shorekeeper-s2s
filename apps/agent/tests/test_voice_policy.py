@@ -25,7 +25,9 @@ def test_voice_policy_user_speaking_gates_delivery():
     policy = VoiceNotificationPolicy()
     policy.set_state(VoiceConversationState.USER_SPEAKING)
 
-    policy.enqueue(PendingNotification(task_id="t2", status="done", summary="Built package"))
+    policy.enqueue(
+        PendingNotification(task_id="t2", status="done", summary="Built package")
+    )
     assert policy.can_deliver_now() is False
     assert len(policy.drain_deliverable()) == 0
 

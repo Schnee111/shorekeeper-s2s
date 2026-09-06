@@ -444,7 +444,9 @@ def _split_sentence(buffer: str) -> tuple[str | None, str]:
                 # File extension guard: don't split on file extensions like .py, .ts, .js, .json, .md
                 # e.g. "agent.py", "conversation.svelte.ts"
                 after = buffer[i + 1 : i + 10]
-                if re.match(r"^[a-zA-Z0-9_-]+\b", after) and not re.match(r"^\s", next_char):
+                if re.match(r"^[a-zA-Z0-9_-]+\b", after) and not re.match(
+                    r"^\s", next_char
+                ):
                     continue
             return buffer[: i + 1], buffer[i + 1 :]
     if len(buffer) > _MAX_PENDING_LEN:

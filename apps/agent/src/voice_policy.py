@@ -6,6 +6,7 @@ Menerapkan state machine percakapan suara dan policy gate:
 - MODEL_SPEAKING: tahan/antrekan notifikasi kecuali critical failure.
 - BATCHING/COALESCE: gabungkan beberapa task selesai menjadi 1 kalimat alami.
 """
+
 import time
 from dataclasses import dataclass
 from enum import Enum
@@ -66,7 +67,9 @@ class VoiceNotificationPolicy:
             return f"Task {n.task_id} {n.status}. {n.summary}"
 
         done_count = sum(1 for n in notifications if n.status == "done")
-        failed_count = sum(1 for n in notifications if n.status in ("failed", "cancelled"))
+        failed_count = sum(
+            1 for n in notifications if n.status in ("failed", "cancelled")
+        )
 
         parts = []
         if done_count > 0:

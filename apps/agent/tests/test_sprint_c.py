@@ -82,6 +82,7 @@ def _delivered(db_path: str, tid: str) -> int:
 # C.1 — claim atomik + rollback saat say() gagal
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_deliver_success_marks_delivered(monkeypatch, tmp_path):
     db = str(tmp_path / "c1.db")
@@ -108,6 +109,7 @@ async def test_deliver_say_fail_keeps_pending(monkeypatch, tmp_path):
 # C.2 — hormati interupsi
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_deliver_interrupted_rolls_back(monkeypatch, tmp_path):
     """Ucapan di-interupsi → rollback delivered=0 → ditawarkan ulang di poll berikutnya."""
@@ -123,6 +125,7 @@ async def test_deliver_interrupted_rolls_back(monkeypatch, tmp_path):
 # C.3 — coalesce multi-task jadi SATU ucapan (maks 5, urut created_at ASC)
 # ---------------------------------------------------------------------------
 
+
 def test_coalesce_single():
     rows = [{"task_id": "t1", "user_intent": "fix login", "summary": "ok"}]
     out = agl.coalesce_notifications(rows)
@@ -132,7 +135,8 @@ def test_coalesce_single():
 
 def test_coalesce_multiple_natural_word():
     rows = [
-        {"task_id": f"t{i}", "user_intent": f"task {i}", "summary": ""} for i in range(3)
+        {"task_id": f"t{i}", "user_intent": f"task {i}", "summary": ""}
+        for i in range(3)
     ]
     out = agl.coalesce_notifications(rows)
     assert "tiga tugas" in out
@@ -140,7 +144,8 @@ def test_coalesce_multiple_natural_word():
 
 def test_coalesce_max_five_items():
     rows = [
-        {"task_id": f"t{i}", "user_intent": f"task {i}", "summary": ""} for i in range(7)
+        {"task_id": f"t{i}", "user_intent": f"task {i}", "summary": ""}
+        for i in range(7)
     ]
     # deliver_notifications membatasi via LIMIT; coalesce sendiri maks 5 input
     out = agl.coalesce_notifications(rows[: agl.COALESCE_MAX])
@@ -174,6 +179,7 @@ async def test_deliver_limits_to_five(tmp_path):
 # ---------------------------------------------------------------------------
 # C.4 — health check startup (non fail-fast)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_startup_health_check_all_down_no_crash(monkeypatch):

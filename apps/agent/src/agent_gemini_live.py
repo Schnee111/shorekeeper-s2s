@@ -178,11 +178,36 @@ server = AgentServer(
 
 FALLBACK_VOICE = "Aoede"
 VALID_GEMINI_VOICES = {
-    "Achernar", "Achird", "Algenib", "Algieba", "Alnilam", "Aoede", "Autonoe",
-    "Callirrhoe", "Charon", "Despina", "Enceladus", "Erinome", "Fenrir", "Gacrux",
-    "Iapetus", "Kore", "Laomedeia", "Leda", "Orus", "Pulcherrima", "Puck",
-    "Rasalgethi", "Sadachbia", "Sadaltager", "Schedar", "Sulafat", "Umbriel",
-    "Vindemiatrix", "Zephyr", "Zubenelgenubi",
+    "Achernar",
+    "Achird",
+    "Algenib",
+    "Algieba",
+    "Alnilam",
+    "Aoede",
+    "Autonoe",
+    "Callirrhoe",
+    "Charon",
+    "Despina",
+    "Enceladus",
+    "Erinome",
+    "Fenrir",
+    "Gacrux",
+    "Iapetus",
+    "Kore",
+    "Laomedeia",
+    "Leda",
+    "Orus",
+    "Pulcherrima",
+    "Puck",
+    "Rasalgethi",
+    "Sadachbia",
+    "Sadaltager",
+    "Schedar",
+    "Sulafat",
+    "Umbriel",
+    "Vindemiatrix",
+    "Zephyr",
+    "Zubenelgenubi",
 }
 
 
@@ -194,7 +219,9 @@ async def search_mempalace(query: str, timeout: float = 3.5) -> str:
     """
     logger.info(f"Searching MemPalace: {query}")
     res = await search_mempalace_mcp(query=query, limit=3, timeout=timeout)
-    return res.get("narrative", f"Tidak ditemukan ingatan terkait '{query}' dalam memoriku.")
+    return res.get(
+        "narrative", f"Tidak ditemukan ingatan terkait '{query}' dalam memoriku."
+    )
 
 
 class ShorekeeperAgent(Agent):
@@ -221,15 +248,21 @@ class ShorekeeperAgent(Agent):
         try:
             async with aiohttp.ClientSession() as session:
                 url = f"http://43.133.136.244:8888/search?q={query}&format=json"
-                async with session.get(url, timeout=aiohttp.ClientTimeout(total=4.0)) as resp:
+                async with session.get(
+                    url, timeout=aiohttp.ClientTimeout(total=4.0)
+                ) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         results = data.get("results", [])[:3]
                         if not results:
-                            return f"Tidak ditemukan hasil pencarian web untuk '{query}'."
+                            return (
+                                f"Tidak ditemukan hasil pencarian web untuk '{query}'."
+                            )
                         snippets = []
                         for r in results:
-                            snippets.append(f"- {r.get('title')}: {r.get('content', '')[:180]}")
+                            snippets.append(
+                                f"- {r.get('title')}: {r.get('content', '')[:180]}"
+                            )
                         return "Hasil pencarian web:\n" + "\n".join(snippets)
         except Exception as e:
             logger.warning(f"SearXNG web search failed: {e}")
@@ -316,7 +349,9 @@ class ShorekeeperAgent(Agent):
         logger.info(f"Checking task status from SQLite: {task_id}")
         try:
             clean_id = task_id.strip() if task_id and isinstance(task_id, str) else None
-            is_latest_query = bool(clean_id and clean_id.lower() in ("latest", "terakhir", "recent"))
+            is_latest_query = bool(
+                clean_id and clean_id.lower() in ("latest", "terakhir", "recent")
+            )
 
             with sqlite3.connect(DB_PATH) as conn:
                 conn.row_factory = sqlite3.Row
@@ -349,7 +384,9 @@ class ShorekeeperAgent(Agent):
                             return f"Task {tid} ({intent}) status: selesai.\nHasil temuan:\n{summary}"
                         return f"Task {tid} ({intent}) status: selesai. Belum ada ringkasan temuan detail."
                     elif status == "failed":
-                        err_msg = error or summary or "terjadi kesalahan tanpa pesan error."
+                        err_msg = (
+                            error or summary or "terjadi kesalahan tanpa pesan error."
+                        )
                         return f"Task {tid} ({intent}) status: gagal.\nPenyebab kegagalan: {err_msg}"
                     elif status == "running":
                         return f"Task {tid} ({intent}) status: sedang berjalan aktif di background (lane: {lane})."
@@ -385,7 +422,10 @@ class ShorekeeperAgent(Agent):
                             items.append(f"- [{tid}] {intent} (sedang berjalan)")
                         else:
                             items.append(f"- [{tid}] {intent} ({status})")
-                    return "Daftar task terbaru di background dengan hasil temuan:\n" + "\n".join(items)
+                    return (
+                        "Daftar task terbaru di background dengan hasil temuan:\n"
+                        + "\n".join(items)
+                    )
         except Exception as e:
             logger.exception("Failed to query tasks")
             return f"Gagal memeriksa status task: {e}"
@@ -395,7 +435,10 @@ async def build_session_context(room_name: str) -> str:
     parts: list[str] = []
 
     # 1. MemPalace preferences + active projects via JSON-RPC 2.0
-    for q, label in [("preferensi user", "Preferensi"), ("proyek aktif", "Proyek Aktif")]:
+    for q, label in [
+        ("preferensi user", "Preferensi"),
+        ("proyek aktif", "Proyek Aktif"),
+    ]:
         res = await search_mempalace_mcp(query=q, limit=2, timeout=1.5)
         if res.get("status") == "ok" and res.get("drawers"):
             lines = [d.get("snippet", "") for d in res.get("drawers", [])]
@@ -473,7 +516,11 @@ def coalesce_notifications(rows: list[dict]) -> str:
         r = rows[0]
         intent = (r.get("user_intent") or r["task_id"]).split(":")[0].strip()
         summary = (r.get("summary") or "").strip()
-        if summary and not summary.startswith("Task '") and not summary.endswith("tanpa network)."):
+        if (
+            summary
+            and not summary.startswith("Task '")
+            and not summary.endswith("tanpa network).")
+        ):
             return f"Schnee, tugas mengenai {intent} sudah selesai. Berikut ringkasannya: {summary}"
         elif summary:
             return f"Schnee, tugas mengenai {intent} sudah berhasil diselesaikan."
@@ -499,7 +546,9 @@ def _rollback_delivered(task_ids: list[str], db_path: str) -> None:
         logger.warning(f"Notification rollback failed: {e}")
 
 
-async def deliver_notifications(session, room_name: str, db_path: str | None = None) -> int:
+async def deliver_notifications(
+    session, room_name: str, db_path: str | None = None
+) -> int:
     """C.1+C.2+C.3: claim atomik → coalesce → say → hormati interupsi.
 
     Pola: UPDATE ... SET delivered=1 WHERE delivered=0 RETURNING task_id (claim
@@ -571,10 +620,13 @@ async def startup_health_check() -> dict[str, bool]:
 
     async def _check_searxng() -> None:
         try:
-            async with aiohttp.ClientSession() as s, s.get(
-                "http://43.133.136.244:8888/healthz",
-                timeout=aiohttp.ClientTimeout(total=2.0),
-            ) as resp:
+            async with (
+                aiohttp.ClientSession() as s,
+                s.get(
+                    "http://43.133.136.244:8888/healthz",
+                    timeout=aiohttp.ClientTimeout(total=2.0),
+                ) as resp,
+            ):
                 health["searxng"] = resp.status < 500
         except Exception:
             health["searxng"] = False
@@ -584,10 +636,13 @@ async def startup_health_check() -> dict[str, bool]:
         if not endpoint:
             return
         try:
-            async with aiohttp.ClientSession() as s, s.get(
-                f"{endpoint}/health",
-                timeout=aiohttp.ClientTimeout(total=2.0),
-            ) as resp:
+            async with (
+                aiohttp.ClientSession() as s,
+                s.get(
+                    f"{endpoint}/health",
+                    timeout=aiohttp.ClientTimeout(total=2.0),
+                ) as resp,
+            ):
                 health["mempalace"] = resp.status < 500
         except Exception:
             health["mempalace"] = False
@@ -595,7 +650,9 @@ async def startup_health_check() -> dict[str, bool]:
     await asyncio.gather(_check_searxng(), _check_mempalace())
     for name, ok in health.items():
         if not ok:
-            logger.warning(f"Startup health check: {name} DOWN — tools tetap terdaftar, narasi error saat dipanggil")
+            logger.warning(
+                f"Startup health check: {name} DOWN — tools tetap terdaftar, narasi error saat dipanggil"
+            )
     return health
 
 
@@ -628,11 +685,15 @@ async def my_agent(ctx: JobContext):
     # Sprint C.4: kredensial kritis → fail-fast
     gemini_api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     if not gemini_api_key:
-        raise RuntimeError("GEMINI_API_KEY / GOOGLE_API_KEY is not set — cannot start session")
+        raise RuntimeError(
+            "GEMINI_API_KEY / GOOGLE_API_KEY is not set — cannot start session"
+        )
 
     # Validate that voice is a valid Gemini voice; if user sent Fish Audio hash, fallback to Aoede
     if voice not in VALID_GEMINI_VOICES:
-        logger.warning(f"Voice '{voice}' is not a valid Gemini voice — falling back to '{FALLBACK_VOICE}'")
+        logger.warning(
+            f"Voice '{voice}' is not a valid Gemini voice — falling back to '{FALLBACK_VOICE}'"
+        )
         voice = FALLBACK_VOICE
 
     # Sprint B.2: resume from persisted handle (cross-restart resumption)
@@ -654,7 +715,9 @@ async def my_agent(ctx: JobContext):
         ),
     }
     if resume_handle:
-        model_kwargs["session_resumption"] = SessionResumptionConfig(handle=resume_handle)
+        model_kwargs["session_resumption"] = SessionResumptionConfig(
+            handle=resume_handle
+        )
     model = RealtimeModel(**model_kwargs)  # type: ignore[arg-type]
 
     # Attach TTS for programmatic push notifications (session.say) without affecting realtime audio.
@@ -669,7 +732,8 @@ async def my_agent(ctx: JobContext):
         logger.warning(f"GeminiTTS init failed: {te}")
 
     agent = ShorekeeperAgent(
-        instructions=SHOREKEEPER_INSTRUCTIONS + ("\n\n" + context_block if context_block else ""),
+        instructions=SHOREKEEPER_INSTRUCTIONS
+        + ("\n\n" + context_block if context_block else ""),
         room_name=ctx.room.name,
     )
 
@@ -693,7 +757,9 @@ async def my_agent(ctx: JobContext):
                 if handle and handle != last_handle:
                     last_handle = handle
                     save_session_handle(ctx.room.name, handle)
-                    logger.info(f"Persisted session resumption handle for {ctx.room.name}")
+                    logger.info(
+                        f"Persisted session resumption handle for {ctx.room.name}"
+                    )
             except Exception as e:
                 logger.debug(f"Resumption handle poll error: {e}")
 
@@ -719,7 +785,10 @@ async def my_agent(ctx: JobContext):
                     await asyncio.wait_for(notify_trigger.wait(), timeout=5.0)
                 notify_trigger.clear()
 
-                if getattr(session, "_activity", None) is None or getattr(session, "_closing_task", None) is not None:
+                if (
+                    getattr(session, "_activity", None) is None
+                    or getattr(session, "_closing_task", None) is not None
+                ):
                     continue
 
                 await deliver_notifications(session, ctx.room.name)
@@ -738,6 +807,7 @@ async def my_agent(ctx: JobContext):
     ctx.add_shutdown_callback(cancel_outbox)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from livekit.agents import cli
+
     cli.run_app(server)

@@ -45,6 +45,11 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Configure Git Identity for Workspace Tests
+        run: |
+          git config --global user.name "Muhammad Daffa Ma'arif"
+          git config --global user.email "daffamaarif.dev@gmail.com"
+
       - name: Build TypeScript Packages (compile dist for monorepo imports)
         run: pnpm -r build
 

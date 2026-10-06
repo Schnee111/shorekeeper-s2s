@@ -11,7 +11,7 @@
   4. Ultra-light DOM: Single HTML render tree (60-120fps smooth scrolling).
 -->
 <script lang="ts">
-  import { marked } from 'marked';
+  import { marked, Renderer } from 'marked';
   import { onDestroy } from 'svelte';
 
   let { 
@@ -22,9 +22,24 @@
     isStreaming?: boolean 
   } = $props();
 
+  function escapeHtml(html: string): string {
+    return html
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  const renderer = new Renderer();
+  renderer.html = function(token: string | { text: string; raw?: string }) {
+    const raw = typeof token === 'string' ? token : (token && token.text) ? token.text : (token && token.raw) ? token.raw : '';
+    return escapeHtml(raw);
+  };
+
   marked.setOptions({
     gfm: true,
     breaks: true,
+    renderer
   });
 
   let displayedChars = $state(0);

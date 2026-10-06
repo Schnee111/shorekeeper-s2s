@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.1](https://github.com/Schnee111/shorekeeper-s2s/compare/shorekeeper-s2s-v0.4.0...shorekeeper-s2s-v0.4.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* **client:** escape raw HTML in marked renderer to prevent XSS ([#42](https://github.com/Schnee111/shorekeeper-s2s/issues/42)) ([44e61c4](https://github.com/Schnee111/shorekeeper-s2s/commit/44e61c4fd3aa9b02e1bcd444c5f1618675e56a43))
+* **nginx:** add mandatory security headers with always flag ([#43](https://github.com/Schnee111/shorekeeper-s2s/issues/43)) ([f8752ad](https://github.com/Schnee111/shorekeeper-s2s/commit/f8752ad27d60466fd7c7ae10a2d4029bfdf60ea4))
+* **sec:** XSS mitigation in marked renderer and nginx security headers ([d135994](https://github.com/Schnee111/shorekeeper-s2s/commit/d1359947898feed526d9b985a6fb928ff3ad17d8))
+
 ## [0.4.0](https://github.com/Schnee111/shorekeeper-s2s/compare/shorekeeper-s2s-v0.3.0...shorekeeper-s2s-v0.4.0) (2026-09-06)
 
 

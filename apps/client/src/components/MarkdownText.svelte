@@ -1,12 +1,27 @@
 <script lang="ts">
-  import { marked } from 'marked';
+  import { marked, Renderer } from 'marked';
 
   let { text = '' }: { text: string } = $props();
 
-  // Configure marked for clean inline/block markdown
+  function escapeHtml(html: string): string {
+    return html
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Configure marked for clean inline/block markdown and prevent raw HTML execution (XSS mitigation)
+  const renderer = new Renderer();
+  renderer.html = function(token: string | { text: string; raw?: string }) {
+    const raw = typeof token === 'string' ? token : (token && token.text) ? token.text : (token && token.raw) ? token.raw : '';
+    return escapeHtml(raw);
+  };
+
   marked.setOptions({
     gfm: true,
-    breaks: true
+    breaks: true,
+    renderer
   });
 
   const parsedHtml = $derived(text ? (marked.parse(text) as string) : '');
